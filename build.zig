@@ -11,6 +11,8 @@ const common_flags = [_][]const u8{
     "-DKCOV_HAS_LIBBFD=0",
     // TODO: fix this for x86_64
     "-DKCOV_LIBFD_DISASM_STYLED=0",
+    // below is necessary for debug version works, https://github.com/ziglang/zig/issues/18521
+    "-fno-sanitize=undefined",
 };
 
 const c_flags = [_][]const u8{} ++ common_flags;
