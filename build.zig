@@ -2,11 +2,7 @@ const std = @import("std");
 
 const stderr_writer = std.io.getStdErr().writer();
 
-const c_flags = [_][]const u8{};
-
-const cxx_flags = [_][]const u8{
-    // "${CMAKE_CXX_FLAGS}",
-    "-std=c++17",
+const common_flags = [_][]const u8{
     "-g",
     "-Wall",
     "-D_GLIBCXX_USE_NANOSLEEP",
@@ -16,6 +12,13 @@ const cxx_flags = [_][]const u8{
     // TODO: fix this for x86_64
     "-DKCOV_LIBFD_DISASM_STYLED=0",
 };
+
+const c_flags = [_][]const u8{} ++ common_flags;
+
+const cxx_flags = [_][]const u8{
+    // "${CMAKE_CXX_FLAGS}",
+    "-std=c++17",
+} ++ common_flags;
 
 const kcov_srcs_cpp = [_][]const u8{
     "src/capabilities.cc",
@@ -182,13 +185,13 @@ pub fn build(b: *std.Build) void {
     exe.addCSourceFiles(.{ .files = &generated_srcs_cpp, .flags = &cxx_flags });
     exe.addCSourceFiles(.{ .files = &generated_srcs_c, .flags = &c_flags });
 
-    exe.linkSystemLibrary2("pthread", .{});
-    exe.linkSystemLibrary2("zlib", .{});
-    exe.linkSystemLibrary2("curl", .{});
-    exe.linkSystemLibrary2("m", .{});
-    exe.linkSystemLibrary2("openssl", .{});
     exe.linkSystemLibrary2("c++", .{});
+    exe.linkSystemLibrary2("pthread", .{});
+    exe.linkSystemLibrary2("curl", .{});
+    exe.linkSystemLibrary2("openssl", .{});
     exe.linkSystemLibrary2("libdwarf", .{ .use_pkg_config = .yes });
+    exe.linkSystemLibrary2("m", .{});
+    exe.linkSystemLibrary2("zlib", .{});
 
     install_exe = b.addInstallArtifact(exe, .{});
 
