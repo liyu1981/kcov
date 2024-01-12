@@ -39,6 +39,12 @@ after building is done. The binary is at `build/src/kcov`. Copy somewhere and us
 
 (Or you can download a copy of Apple Silicon version binary from the release section.)
 
+### But can I build it with `zig`?
+
+There is now an experimental `build.zig` file, and you can use `zig build sign_kcov` to build on Macos with M1/M2/M3 chip. The built result will be at `zig-out/bin/kcov`, and it will work as same to the one compiled from CMake. (need this `sign_kcov` step because macos needs to sign before use for debugging purpose, which is how `kcov` underlying works).
+
+I am planning to complete this `build.zig` in future for `Linux`/`Windows` on `x86_64` or even `arm/arm64`, but it needs some time.
+
 ## File Support
 
 - for Zig, support source file with `.zig` extension.
