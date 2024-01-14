@@ -393,10 +393,6 @@ private:
 				warning("Can't read CSS file %s\n", cssFileName.c_str());
 		}
 
-		write_file(icon_amber_data.data(), icon_amber_data.size(), "%s/amber.png", dir.c_str());
-		write_file(icon_glass_data.data(), icon_glass_data.size(), "%s/glass.png", dir.c_str());
-		write_file(css.data(), css.size(), "%s/bcov.css", dir.c_str());
-
 		(void) mkdir(fmt("%s/data", dir.c_str()).c_str(), 0755);
 		(void) mkdir(fmt("%s/data/js", dir.c_str()).c_str(), 0755);
 		write_file(icon_amber_data.data(), icon_amber_data.size(), "%s/data/amber.png", dir.c_str());
