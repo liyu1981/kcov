@@ -364,6 +364,14 @@ fn runCommandsAndGetResult(allocator: std.mem.Allocator, commands: []const []con
     return last_stdout;
 }
 
+fn ensureDirPath(cwd: *const std.fs.Dir, subpath: []const u8) anyerror!void {
+    var d = cwd.openDir(subpath, .{}) catch {
+        try cwd.makePath(subpath);
+        return;
+    };
+    d.close();
+}
+
 fn genVersionMake(self: *std.Build.Step, prog_node: *std.Progress.Node) anyerror!void {
     _ = prog_node;
     _ = self;
@@ -374,6 +382,8 @@ fn genVersionMake(self: *std.Build.Step, prog_node: *std.Progress.Node) anyerror
     _ = &allocator;
 
     const cwd = std.fs.cwd();
+
+    try ensureDirPath(&cwd, "zig-out/generated/");
 
     const pod_version = brk: {
         var v: []const u8 = undefined;
@@ -415,31 +425,22 @@ fn generateSourceStepMake(self: *std.Build.Step, prog_node: *std.Progress.Node) 
 
     const cwd = std.fs.cwd();
 
+    try ensureDirPath(&cwd, "zig-out/generated/");
+
     {
         const out = runCommandAndGetResult(allocator, &[_][]const u8{
-            "src/bin-to-c-source.py",
-            "data/bcov.css",
-            "css_text",
-            "data/amber.png",
-            "icon_amber",
-            "data/glass.png",
-            "icon_glass",
-            "data/source-file.html",
-            "source_file_text",
-            "data/index.html",
-            "index_text",
-            "data/js/handlebars.js",
-            "handlebars_text",
-            "data/js/kcov.js",
-            "kcov_text",
-            "data/js/jquery.min.js",
-            "jquery_text",
-            "data/js/jquery.tablesorter.min.js",
-            "tablesorter_text",
-            "data/js/jquery.tablesorter.widgets.min.js",
-            "tablesorter_widgets_text",
-            "data/tablesorter-theme.css",
-            "tablesorter_theme_text",
+            "python3",                                   "src/bin-to-c-source.py",
+            "data/bcov.css",                             "css_text",
+            "data/amber.png",                            "icon_amber",
+            "data/glass.png",                            "icon_glass",
+            "data/source-file.html",                     "source_file_text",
+            "data/index.html",                           "index_text",
+            "data/js/handlebars.js",                     "handlebars_text",
+            "data/js/kcov.js",                           "kcov_text",
+            "data/js/jquery.min.js",                     "jquery_text",
+            "data/js/jquery.tablesorter.min.js",         "tablesorter_text",
+            "data/js/jquery.tablesorter.widgets.min.js", "tablesorter_widgets_text",
+            "data/tablesorter-theme.css",                "tablesorter_theme_text",
         }, null, "run bin-to-c-source for html-data-files.cc");
 
         const f = try cwd.createFile("./zig-out/generated/html-data-files.cc", .{});
@@ -450,9 +451,8 @@ fn generateSourceStepMake(self: *std.Build.Step, prog_node: *std.Progress.Node) 
     {
         const kcov_system_lib_path = install_kcov_system_lib.emitted_bin.?.getPath(global_build);
         const out = runCommandAndGetResult(allocator, &[_][]const u8{
-            "src/bin-to-c-source.py",
-            kcov_system_lib_path,
-            "kcov_system_library",
+            "python3",            "src/bin-to-c-source.py",
+            kcov_system_lib_path, "kcov_system_library",
         }, null, "run bin-to-c-source for kcov-system-library.cc");
 
         const f = try cwd.createFile("./zig-out/generated/kcov-system-library.cc", .{});
@@ -462,11 +462,9 @@ fn generateSourceStepMake(self: *std.Build.Step, prog_node: *std.Progress.Node) 
 
     {
         const out = runCommandAndGetResult(allocator, &[_][]const u8{
-            "src/bin-to-c-source.py",
-            "src/engines/bash-helper.sh",
-            "bash_helper",
-            "src/engines/bash-helper-debug-trap.sh",
-            "bash_helper_debug_trap",
+            "python3",                               "src/bin-to-c-source.py",
+            "src/engines/bash-helper.sh",            "bash_helper",
+            "src/engines/bash-helper-debug-trap.sh", "bash_helper_debug_trap",
         }, null, "run bin-to-c-source for bash-helper.cc");
 
         const f = try cwd.createFile("./zig-out/generated/bash-helper.cc", .{});
@@ -477,9 +475,8 @@ fn generateSourceStepMake(self: *std.Build.Step, prog_node: *std.Progress.Node) 
     {
         const bash_evecve_director_lib_path = install_bash_execve_redirector_lib.emitted_bin.?.getPath(global_build);
         const out = runCommandAndGetResult(allocator, &[_][]const u8{
-            "src/bin-to-c-source.py",
-            bash_evecve_director_lib_path,
-            "bash_redirector_library",
+            "python3",                     "src/bin-to-c-source.py",
+            bash_evecve_director_lib_path, "bash_redirector_library",
         }, null, "run bin-to-c-source for bash-redirector-library.cc");
 
         const f = try cwd.createFile("./zig-out/generated/bash-redirector-library.cc", .{});
@@ -490,9 +487,8 @@ fn generateSourceStepMake(self: *std.Build.Step, prog_node: *std.Progress.Node) 
     {
         const bash_tracefd_cloexec_lib_path = install_bash_tracefd_cloexec_lib.emitted_bin.?.getPath(global_build);
         const out = runCommandAndGetResult(allocator, &[_][]const u8{
-            "src/bin-to-c-source.py",
-            bash_tracefd_cloexec_lib_path,
-            "bash_cloexec_library",
+            "python3",                     "src/bin-to-c-source.py",
+            bash_tracefd_cloexec_lib_path, "bash_cloexec_library",
         }, null, "run bin-to-c-source for bash-cloexec-library.cc");
 
         const f = try cwd.createFile("./zig-out/generated/bash-cloexec-library.cc", .{});
@@ -502,9 +498,8 @@ fn generateSourceStepMake(self: *std.Build.Step, prog_node: *std.Progress.Node) 
 
     {
         const out = runCommandAndGetResult(allocator, &[_][]const u8{
-            "src/bin-to-c-source.py",
-            "src/engines/python-helper.py",
-            "python_helper",
+            "python3",                      "src/bin-to-c-source.py",
+            "src/engines/python-helper.py", "python_helper",
         }, null, "run bin-to-c-source for python-helper.cc");
 
         const f = try cwd.createFile("./zig-out/generated/python-helper.cc", .{});
