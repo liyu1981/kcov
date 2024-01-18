@@ -1,0 +1,15 @@
+.{
+    .name = "kcov",
+    // kcov use numbers (as well as git version) for versioning, which is not semantic
+    // we will use convert kcov's version as <kcov version>.x.x
+    .version = "42.0.1",
+    .minimum_zig_version = "0.12.0",
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "LICENSE",
+        "README.md",
+    },
+}

@@ -1,3 +1,6 @@
 [submodule "tests/unit-tests/trompeloeil"]
 	path = tests/unit-tests/trompeloeil
 	url = https://github.com/rollbear/trompeloeil.git
+[submodule "zig_libs/zcmd.zig"]
+	path = zig_libs/zcmd.zig
+	url = https://github.com/liyu1981/zcmd.zig
