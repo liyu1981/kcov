@@ -1,5 +1,5 @@
 const std = @import("std");
-const Zcmd = @import("zig_libs/zcmd.zig/src/zcmd.zig");
+const zcmd = @import("zcmd").zcmd;
 
 const stderr_writer = std.io.getStdErr().writer();
 
@@ -272,16 +272,6 @@ fn ensureDirPath(cwd: *const std.fs.Dir, subpath: []const u8) anyerror!void {
     d.close();
 }
 
-fn assertCmdSucceeded(result: Zcmd.RunResult, comptime check_stdout: bool) void {
-    const check = if (check_stdout)
-        !(result.term.Exited == 0 and result.stdout != null and result.stdout.?.len > 0)
-    else
-        !(result.term.Exited == 0);
-    if (check) {
-        @panic("command failed!");
-    }
-}
-
 fn genVersionMake(self: *std.Build.Step, prog_node: *std.Progress.Node) anyerror!void {
     _ = prog_node;
     _ = self;
@@ -297,7 +287,7 @@ fn genVersionMake(self: *std.Build.Step, prog_node: *std.Progress.Node) anyerror
 
     const pod_version = brk: {
         cwd.access(".git", .{}) catch {
-            const result = try Zcmd.run(.{
+            const result = try zcmd.run(.{
                 .allocator = allocator,
                 .commands = &[_][]const []const u8{
                     &.{ "head", "-n", "1", "Changelog" },
@@ -306,19 +296,17 @@ fn genVersionMake(self: *std.Build.Step, prog_node: *std.Progress.Node) anyerror
                 },
             });
             std.debug.print("\n{any}\n", .{result});
-            assertCmdSucceeded(result, true);
-            const version = std.mem.trim(u8, result.stdout.?, " \t\r\n");
-            break :brk version;
+            result.assertSucceededPanic(.{});
+            break :brk result.trimedStdout();
         };
 
         // do not try to download git as originam CMakeList does. Do you guys have git?
-        const result = try Zcmd.run(.{
+        const result = try zcmd.run(.{
             .allocator = allocator,
             .commands = &[_][]const []const u8{&.{ "git", "--git-dir=./.git", "describe", "--abbrev=4", "HEAD" }},
         });
-        assertCmdSucceeded(result, true);
-        const version = std.mem.trim(u8, result.stdout.?, " \t\r\n");
-        break :brk version;
+        result.assertSucceededPanic(.{});
+        break :brk result.trimedStdout();
     };
 
     const f = try cwd.createFile("./zig-out/generated/version.c", .{});
@@ -346,7 +334,7 @@ fn generateSourceStepMake(self: *std.Build.Step, prog_node: *std.Progress.Node) 
     try ensureDirPath(&cwd, "zig-out/generated/");
 
     {
-        const result = try Zcmd.run(.{
+        const result = try zcmd.run(.{
             .allocator = allocator,
             .commands = &[_][]const []const u8{
                 &.{
@@ -365,14 +353,14 @@ fn generateSourceStepMake(self: *std.Build.Step, prog_node: *std.Progress.Node) 
                 },
             },
         });
-        assertCmdSucceeded(result, true);
+        result.assertSucceededPanic(.{});
         const f = try cwd.createFile("./zig-out/generated/html-data-files.cc", .{});
         defer f.close();
-        try f.writer().print("{s}", .{result.stdout.?});
+        try f.writer().print("{s}\n", .{result.trimedStdout()});
     }
     {
         const kcov_system_lib_path = install_kcov_system_lib.emitted_bin.?.getPath(global_build);
-        const result = try Zcmd.run(.{
+        const result = try zcmd.run(.{
             .allocator = allocator,
             .commands = &[_][]const []const u8{
                 &.{
@@ -381,13 +369,13 @@ fn generateSourceStepMake(self: *std.Build.Step, prog_node: *std.Progress.Node) 
                 },
             },
         });
-        assertCmdSucceeded(result, true);
+        result.assertSucceededPanic(.{});
         const f = try cwd.createFile("./zig-out/generated/kcov-system-library.cc", .{});
         defer f.close();
-        try f.writer().print("{s}", .{result.stdout.?});
+        try f.writer().print("{s}\n", .{result.trimedStdout()});
     }
     {
-        const result = try Zcmd.run(.{
+        const result = try zcmd.run(.{
             .allocator = allocator,
             .commands = &[_][]const []const u8{
                 &.{
@@ -397,14 +385,14 @@ fn generateSourceStepMake(self: *std.Build.Step, prog_node: *std.Progress.Node) 
                 },
             },
         });
-        assertCmdSucceeded(result, true);
+        result.assertSucceededPanic(.{});
         const f = try cwd.createFile("./zig-out/generated/bash-helper.cc", .{});
         defer f.close();
-        try f.writer().print("{s}", .{result.stdout.?});
+        try f.writer().print("{s}\n", .{result.trimedStdout()});
     }
     {
         const bash_evecve_director_lib_path = install_bash_execve_redirector_lib.emitted_bin.?.getPath(global_build);
-        const result = try Zcmd.run(.{
+        const result = try zcmd.run(.{
             .allocator = allocator,
             .commands = &[_][]const []const u8{
                 &.{
@@ -413,14 +401,14 @@ fn generateSourceStepMake(self: *std.Build.Step, prog_node: *std.Progress.Node) 
                 },
             },
         });
-        assertCmdSucceeded(result, true);
+        result.assertSucceededPanic(.{});
         const f = try cwd.createFile("./zig-out/generated/bash-redirector-library.cc", .{});
         defer f.close();
-        try f.writer().print("{s}", .{result.stdout.?});
+        try f.writer().print("{s}\n", .{result.trimedStdout()});
     }
     {
         const bash_tracefd_cloexec_lib_path = install_bash_tracefd_cloexec_lib.emitted_bin.?.getPath(global_build);
-        const result = try Zcmd.run(.{
+        const result = try zcmd.run(.{
             .allocator = allocator,
             .commands = &[_][]const []const u8{
                 &.{
@@ -429,13 +417,13 @@ fn generateSourceStepMake(self: *std.Build.Step, prog_node: *std.Progress.Node) 
                 },
             },
         });
-        assertCmdSucceeded(result, true);
+        result.assertSucceededPanic(.{});
         const f = try cwd.createFile("./zig-out/generated/bash-cloexec-library.cc", .{});
         defer f.close();
-        try f.writer().print("{s}", .{result.stdout.?});
+        try f.writer().print("{s}\n", .{result.trimedStdout()});
     }
     {
-        const result = try Zcmd.run(.{
+        const result = try zcmd.run(.{
             .allocator = allocator,
             .commands = &[_][]const []const u8{
                 &.{
@@ -444,42 +432,42 @@ fn generateSourceStepMake(self: *std.Build.Step, prog_node: *std.Progress.Node) 
                 },
             },
         });
-        assertCmdSucceeded(result, true);
+        result.assertSucceededPanic(.{});
         const f = try cwd.createFile("./zig-out/generated/python-helper.cc", .{});
-        try f.writer().print("{s}", .{result.stdout.?});
+        try f.writer().print("{s}\n", .{result.trimedStdout()});
         defer f.close();
     }
 
     {
-        var result: Zcmd.RunResult = undefined;
-        result = try Zcmd.run(.{
+        var result: zcmd.RunResult = undefined;
+        result = try zcmd.run(.{
             .allocator = allocator,
             .commands = &[_][]const []const u8{
                 &.{ "mig", "src/engines/osx/mach_exc.defs" },
             },
         });
-        assertCmdSucceeded(result, false);
-        result = try Zcmd.run(.{
+        result.assertSucceededPanic(.{ .check_stdout_not_empty = false });
+        result = try zcmd.run(.{
             .allocator = allocator,
             .commands = &[_][]const []const u8{
                 &.{ "mv", "mach_exc.h", "zig-out/generated/" },
             },
         });
-        assertCmdSucceeded(result, false);
-        result = try Zcmd.run(.{
+        result.assertSucceededPanic(.{ .check_stdout_not_empty = false });
+        result = try zcmd.run(.{
             .allocator = allocator,
             .commands = &[_][]const []const u8{
                 &.{ "mv", "mach_excServer.c", "zig-out/generated/" },
             },
         });
-        assertCmdSucceeded(result, false);
-        result = try Zcmd.run(.{
+        result.assertSucceededPanic(.{ .check_stdout_not_empty = false });
+        result = try zcmd.run(.{
             .allocator = allocator,
             .commands = &[_][]const []const u8{
                 &.{ "mv", "mach_excUser.c", "zig-out/generated/" },
             },
         });
-        assertCmdSucceeded(result, false);
+        result.assertSucceededPanic(.{ .check_stdout_not_empty = false });
     }
 }
 
@@ -505,11 +493,11 @@ fn signExeMake(self: *std.Build.Step, prog_node: *std.Progress.Node) anyerror!vo
         return error.OOM;
     }
 
-    const result = try Zcmd.run(.{
+    const result = try zcmd.run(.{
         .allocator = allocator,
         .commands = &[_][]const []const u8{
             &.{ "codesign", "-s", "-", "--entitlements", "osx-entitlements.xml", "-f", "zig-out/bin/kcov" },
         },
     });
-    assertCmdSucceeded(result, false);
+    result.assertSucceededPanic(.{ .check_stdout_not_empty = false, .check_stderr_empty = false });
 }
